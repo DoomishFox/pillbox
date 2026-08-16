@@ -59,9 +59,9 @@ enum class AppDestinations(
     @DrawableRes val icon: Int,
     @StringRes val contentDescription: Int,
 ) {
-    PROGRESS(label = R.string.home_nav, icon = R.drawable.pill_24px, contentDescription = R.string.home_nav),
-    MEDICATIONS(label = R.string.medications_nav, icon = R.drawable.prescriptions_24px, contentDescription = R.string.medications_nav),
-    INVENTORY(label = R.string.profile_nav, icon = R.drawable.account_circle_24px, contentDescription = R.string.profile_nav),
+    PROGRESS(label = R.string.home_nav, icon = R.drawable.heart_check_24px, contentDescription = R.string.home_nav),
+    MEDICATIONS(label = R.string.medications_nav, icon = R.drawable.admin_meds_24px, contentDescription = R.string.medications_nav),
+    INVENTORY(label = R.string.profile_nav, icon = R.drawable.medication_24px, contentDescription = R.string.profile_nav),
 }
 
 class MainActivity : ComponentActivity() {
@@ -78,10 +78,11 @@ class MainActivity : ComponentActivity() {
             MedicationsTheme(
                 dynamicColor = true
             ) {
-                Scaffold { innerPadding ->
+                Scaffold(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ) { innerPadding ->
                     NavigationSuiteScaffold(
                         modifier = Modifier.padding(innerPadding.copy(bottom = 0.dp)),
-                        //containerColor = MaterialTheme.colorScheme.surfaceContainer,
                         navigationItems = {
                             AppDestinations.entries.forEach {
                                 NavigationSuiteItem(
@@ -99,7 +100,7 @@ class MainActivity : ComponentActivity() {
                         },
                     ) {
                         when (currentDestination) {
-                            AppDestinations.PROGRESS -> Progress()
+                            AppDestinations.PROGRESS -> Progress(outerPadding = innerPadding)
                             AppDestinations.MEDICATIONS -> Medications()
                             AppDestinations.INVENTORY -> Inventory()
                         }

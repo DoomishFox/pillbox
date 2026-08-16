@@ -1,4 +1,4 @@
-package com.foxnet.medications.Database
+package com.foxnet.medications.database
 
 import androidx.room3.Entity
 import androidx.room3.PrimaryKey

@@ -1,12 +1,14 @@
-package com.foxnet.medications.Database
+package com.foxnet.medications.database
 
 import androidx.room3.Entity
 import androidx.room3.ForeignKey
+import androidx.room3.Index
 import androidx.room3.PrimaryKey
 import java.time.LocalTime
 import java.time.Period
 
 @Entity(
+    indices = [Index(value = ["medicationId"])],
     foreignKeys = [
         ForeignKey(
             entity = Medication::class,
@@ -39,6 +41,7 @@ data class Prescription(
 )
 
 @Entity(
+    indices = [Index(value = ["prescriptionId"])],
     foreignKeys = [
         ForeignKey(
             entity = Prescription::class,

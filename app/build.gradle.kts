@@ -2,11 +2,12 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.foxnet.medications"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.foxnet.medications"
@@ -34,6 +35,7 @@ android {
     buildFeatures {
         compose = true
     }
+    compileSdkMinor = 1
 }
 
 kotlin {
@@ -48,8 +50,8 @@ dependencies {
     implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.room3.compiler)
-    implementation(libs.androidx.room3.gradle.plugin)
+    implementation(libs.androidx.room.common.jvm)
+    ksp(libs.androidx.room3.compiler)
     implementation(libs.androidx.room3.runtime)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.core.ktx)
@@ -60,6 +62,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.ui.text.gfonts)
     implementation(libs.androidx.material3)
     implementation(libs.material3)
     testImplementation(libs.junit)

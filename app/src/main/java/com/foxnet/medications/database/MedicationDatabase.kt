@@ -1,13 +1,14 @@
-package com.foxnet.medications.Database
+package com.foxnet.medications.database
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.room3.ColumnTypeConverters
 import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
-import com.foxnet.medications.ProgressViewModel
+import com.foxnet.medications.viewmodels.ProgressViewModel
 
 @Dao
 interface ChartDb {
@@ -24,6 +25,7 @@ interface ChartDb {
     version = 1,
     exportSchema = false
 )
+@ColumnTypeConverters(DatabaseConverters::class)
 abstract class MedicationDatabase : RoomDatabase() {
 
     abstract fun chart(): ChartDb
