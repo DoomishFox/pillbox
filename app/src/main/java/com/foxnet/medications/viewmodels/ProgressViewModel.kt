@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.update
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.collections.plus
 
 data class Task (
     val id: Int,
