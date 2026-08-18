@@ -44,6 +44,7 @@ import com.foxnet.medications.composables.TaskGroup
 import com.foxnet.medications.database.PersistentViewModelFactory
 import com.foxnet.medications.ui.theme.fonts
 import com.foxnet.medications.ui.theme.spacing
+import com.foxnet.medications.viewmodels.AdministrationOutcome
 import com.foxnet.medications.viewmodels.ProgressViewModel
 
 
@@ -70,6 +71,9 @@ public fun Progress(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             )
+        },
+        floatingActionButton = {
+
         }
     ) { innerPadding ->
         Column(
@@ -91,23 +95,47 @@ public fun Progress(
                     )
                     .padding(MaterialTheme.spacing.medium)
             ) {
-                SectionScaffold(
-                    label = { Text(
-                        text = "9:00 AM",
-                        style = MaterialTheme.typography.titleMedium
-                    ) },
-                    icon = { color -> Icon(
-                        painter = painterResource(R.drawable.prescriptions_24px),
-                        contentDescription = "Pill icon",
-                        tint = color
-                    ) }
-                ) {
-                    TaskGroup(
-                        titleNoun = "medication",
-                        tasks = todayState.tasks,
-                        onTaskAccept = { id -> viewModel.completeDailyTask(id) },
-                        onTaskDecline = {},
-                    )
+                if (todayState.taskGroups.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .padding(vertical = MaterialTheme.spacing.extraExtraLarge)
+                            .align(Alignment.CenterHorizontally),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.heart_check_24px),
+                            contentDescription = "No medications scheduled today.",
+                            tint = MaterialTheme.colorScheme.outlineVariant,
+                            modifier = Modifier
+                                .size(MaterialTheme.spacing.extraLarge),
+                        )
+                        Text(
+                            text = "All caught up!",
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
+                } else {
+                    todayState.taskGroups.forEach { group ->
+                        SectionScaffold(
+                            label = { style -> Text(group.label, style = style) },
+                            icon = { color -> Icon(
+                                painter = painterResource(R.drawable.prescriptions_24px),
+                                contentDescription = "Pill icon",
+                                tint = color
+                            ) },
+                        ) {
+                            TaskGroup(
+                                titleNoun = "medication",
+                                tasks = group.tasks,
+                                onTaskAccept = { id ->
+                                    viewModel.recordAdministration(id, AdministrationOutcome.TAKEN)
+                                },
+                                onTaskDecline = { id ->
+                                    viewModel.recordAdministration(id, AdministrationOutcome.SKIPPED)
+                                },
+                            )
+                        }
+                    }
                 }
 
                 HorizontalTextDivider(

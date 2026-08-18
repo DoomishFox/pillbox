@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Medications</string>
     <string name="home_nav">Progress</string>
-    <string name="medications_nav">Medications</string>
+    <string name="medications_nav">Prescriptions</string>
     <string name="profile_nav">Inventory</string>
 </resources>

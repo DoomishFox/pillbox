@@ -14,13 +14,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import com.foxnet.medications.ui.theme.fonts
 import com.foxnet.medications.ui.theme.spacing
-import com.foxnet.medications.viewmodels.Task
+import com.foxnet.medications.viewmodels.AdministrationTask
 
 @Composable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 fun TaskGroup(
     titleNoun: String = "task",
-    tasks: List<Task>,
+    tasks: List<AdministrationTask>,
     onTaskAccept: (Int) -> Unit,
     onTaskDecline: (Int) -> Unit,
 ) {

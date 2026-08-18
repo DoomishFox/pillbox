@@ -23,12 +23,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.foxnet.medications.R
 import com.foxnet.medications.ui.theme.spacing
-import com.foxnet.medications.viewmodels.Task
+import com.foxnet.medications.viewmodels.AdministrationTask
+import com.foxnet.medications.viewmodels.AdministrationOutcome
 
 @Composable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 fun TaskItem(
-    task: Task,
+    task: AdministrationTask,
     onAccept: () -> Unit,
     onDecline: () -> Unit,
 ) {
@@ -62,7 +63,11 @@ fun TaskItem(
                 style = MaterialTheme.typography.bodyLargeEmphasized,
             )
             Text(
-                text = "1 capsule",
+                text = when (task.outcome) {
+                    AdministrationOutcome.TAKEN -> "Taken"
+                    AdministrationOutcome.SKIPPED -> "Skipped"
+                    null -> "${task.dose} ${task.doseUnit}"
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -71,12 +76,12 @@ fun TaskItem(
         Row(
         ) {
             TextButton(
-                onClick = {}
+                onClick = onDecline
             ) {
-                Text("skip")
+                Text(if (task.outcome == AdministrationOutcome.SKIPPED) "Skipped" else "skip")
             }
             FilledTonalToggleButton(
-                checked = task.completed,
+                checked = task.outcome == AdministrationOutcome.TAKEN,
                 onCheckedChange = { onAccept() },
                 colors = FilledTonalToggleButtonDefaults.filledTonalToggleButtonColors(
                     checkedContainerColor = MaterialTheme.colorScheme.primary

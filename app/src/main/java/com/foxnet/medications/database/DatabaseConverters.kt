@@ -23,4 +23,10 @@ class DatabaseConverters {
 
     @ColumnTypeConverter
     fun stringToPeriod(value: String?): Period? = value?.let(Period::parse)
+
+    @ColumnTypeConverter
+    fun injectionSiteToString(value: InjectionSite?): String? = value?.name
+
+    @ColumnTypeConverter
+    fun stringToInjectionSite(value: String?): InjectionSite? = value?.let(InjectionSite::valueOf)
 }

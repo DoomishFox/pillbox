@@ -28,7 +28,7 @@ import java.time.LocalTime
     ]
 )
 data class AdministrationRecord(
-    @PrimaryKey val id: Int,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     // [FOREIGN_KEY] -> Medication
     // this is linked to a Medication rather than a Prescription because if the Prescription gets
     // deleted the AdministrationRecord should retain all necessary information.
@@ -47,4 +47,6 @@ data class AdministrationRecord(
     val withFood: Boolean,
     val date: LocalDate,
     val time: LocalTime,
+    // Only applicable to injectable medications.
+    val injectionSite: InjectionSite? = null,
 )

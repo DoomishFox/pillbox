@@ -4,6 +4,7 @@ import androidx.room3.Entity
 import androidx.room3.ForeignKey
 import androidx.room3.Index
 import androidx.room3.PrimaryKey
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.Period
 
@@ -32,13 +33,26 @@ data class Prescription(
     val defaultDoseUnit: String,
     val defaultDose: Int,
     val withFood: Boolean,
+    // The first day this prescription can produce administrations.
+    val startDate: LocalDate,
+    // A prescription ends either on a fixed date or after a duration from its start date.
+    val endDate: LocalDate? = null,
+    val duration: Period? = null,
     // TODO:
     //  other things to include:
     //  - notification settings
     // schedule is a cron string that defines how often the prescription should repeat its
     // administrations.
     val schedule: String,
-)
+    // Optional directions for medications that need a specific administration method.
+    val administrationInstructions: String? = null,
+) {
+    init {
+        require((endDate == null) != (duration == null)) {
+            "A prescription must have exactly one end condition: endDate or duration."
+        }
+    }
+}
 
 @Entity(
     indices = [Index(value = ["prescriptionId"])],

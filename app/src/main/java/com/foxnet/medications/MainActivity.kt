@@ -48,7 +48,7 @@ enum class AppDestinations(
     @StringRes val contentDescription: Int,
 ) {
     PROGRESS(label = R.string.home_nav, icon = R.drawable.heart_check_24px, contentDescription = R.string.home_nav),
-    MEDICATIONS(label = R.string.medications_nav, icon = R.drawable.admin_meds_24px, contentDescription = R.string.medications_nav),
+    PRESCRIPTIONS(label = R.string.medications_nav, icon = R.drawable.prescriptions_24px, contentDescription = R.string.medications_nav),
     INVENTORY(label = R.string.profile_nav, icon = R.drawable.medication_24px, contentDescription = R.string.profile_nav),
 }
 
@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         when (currentDestination) {
                             AppDestinations.PROGRESS -> Progress(outerPadding = innerPadding)
-                            AppDestinations.MEDICATIONS -> Medications()
+                            AppDestinations.PRESCRIPTIONS -> Medications()
                             AppDestinations.INVENTORY -> Inventory()
                         }
                     }
