@@ -29,4 +29,10 @@ class DatabaseConverters {
 
     @ColumnTypeConverter
     fun stringToInjectionSite(value: String?): InjectionSite? = value?.let(InjectionSite::valueOf)
+
+    @ColumnTypeConverter
+    fun medicationTypeToString(value: MedicationType?): String? = value?.name
+
+    @ColumnTypeConverter
+    fun stringToMedicationType(value: String?): MedicationType? = value?.let(MedicationType::valueOf)
 }

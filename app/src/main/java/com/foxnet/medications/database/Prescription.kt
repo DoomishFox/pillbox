@@ -20,36 +20,30 @@ import java.time.Period
     ]
 )
 data class Prescription(
-    @PrimaryKey val id: Int,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val active: Boolean,
     // [FOREIGN_KEY] -> Medication
     // every Prescription MUST be attached to a Medication, this is non-negotiable.
     val medicationId: Int,
     val type: Int,
     val friendlyName: String,
-    // dose
-    // eg: 0.1 mL
-    // ^- im storing dose as Int despite knowing I want to display decimals sometimes. the database
-    //    should store the dose here as 100 µL. the UI can do what it wants with this information.
-    val defaultDoseUnit: String,
-    val defaultDose: Int,
     val withFood: Boolean,
     // The first day this prescription can produce administrations.
     val startDate: LocalDate,
-    // A prescription ends either on a fixed date or after a duration from its start date.
+    // Prescriptions are ongoing unless either of these end conditions is supplied.
     val endDate: LocalDate? = null,
     val duration: Period? = null,
     // TODO:
     //  other things to include:
     //  - notification settings
-    // schedule is a cron string that defines how often the prescription should repeat its
-    // administrations.
+    // JSON-encoded PrescriptionSchedule defining when the prescription repeats.
     val schedule: String,
     // Optional directions for medications that need a specific administration method.
     val administrationInstructions: String? = null,
 ) {
     init {
-        require((endDate == null) != (duration == null)) {
-            "A prescription must have exactly one end condition: endDate or duration."
+        require(endDate == null || duration == null) {
+            "A prescription cannot have both an endDate and a duration."
         }
     }
 }
@@ -66,15 +60,15 @@ data class Prescription(
     ]
 )
 data class PrescriptionAdministration(
-    @PrimaryKey val id: Int,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     // [FOREIGN_KEY] -> Prescription
     val prescriptionId: Int,
     // dose copies the dose in linked Prescription unless overridden.
     // eg: 0.1 mL
     // ^- im storing dose as Int despite knowing I want to display decimals sometimes. the database
     //    should store the dose here as 100 µL. the UI can do what it wants with this information.
-    val doseUnit: String,
-    val dose: Int,
+    val doseUnit: String?,
+    val dose: Int?,
     // multiplier for dose at frequency
     // eg: 2x [0.1 mL] every [4 hour]
     // default: 1
@@ -87,4 +81,6 @@ data class PrescriptionAdministration(
     // time of day when prescription is to be administered.
     val time: LocalTime?,
     val event: String?,
+    // Optional note specific to this administration, such as "With breakfast".
+    val administrationInstructions: String? = null,
 )

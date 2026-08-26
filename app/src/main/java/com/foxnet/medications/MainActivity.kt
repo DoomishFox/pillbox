@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
@@ -30,7 +31,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +55,8 @@ enum class AppDestinations(
     INVENTORY(label = R.string.profile_nav, icon = R.drawable.medication_24px, contentDescription = R.string.profile_nav),
 }
 
+private enum class FullScreenDestination { ADD_PRESCRIPTION, ADD_INVENTORY_MEDICATION }
+
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     //@OptIn(ExperimentalMaterial3AdaptiveApi::class)
@@ -62,58 +67,44 @@ class MainActivity : ComponentActivity() {
             var currentDestination by rememberSaveable {
                 mutableStateOf(AppDestinations.PROGRESS)
             }
+            val backStack = remember { mutableStateListOf<FullScreenDestination>() }
+            val fullScreenDestination = backStack.lastOrNull()
+
+            BackHandler(enabled = fullScreenDestination != null || currentDestination != AppDestinations.PROGRESS) {
+                if (backStack.isNotEmpty()) backStack.removeLast()
+                else currentDestination = AppDestinations.PROGRESS
+            }
 
             MedicationsTheme(
                 dynamicColor = true
             ) {
-                Scaffold(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                ) { innerPadding ->
-                    NavigationSuiteScaffold(
-                        modifier = Modifier.padding(innerPadding.copy(bottom = 0.dp)),
-                        navigationItems = {
-                            AppDestinations.entries.forEach {
-                                NavigationSuiteItem(
-                                    icon = {
-                                        Icon(
-                                            painter = painterResource(it.icon),
-                                            contentDescription = stringResource(it.contentDescription)
-                                        )
-                                    },
-                                    label = { Text(stringResource(it.label)) },
-                                    selected = it == currentDestination,
-                                    onClick = { currentDestination = it }
-                                )
+                when (fullScreenDestination) {
+                    FullScreenDestination.ADD_PRESCRIPTION -> AddPrescriptionPage(onBack = { backStack.removeLast() })
+                    FullScreenDestination.ADD_INVENTORY_MEDICATION -> AddInventoryMedicationPage(onBack = { backStack.removeLast() })
+                    null -> Scaffold(containerColor = MaterialTheme.colorScheme.surfaceContainer) { innerPadding ->
+                        NavigationSuiteScaffold(
+                            modifier = Modifier.padding(innerPadding.copy(bottom = 0.dp)),
+                            navigationItems = {
+                                AppDestinations.entries.forEach {
+                                    NavigationSuiteItem(
+                                        icon = { Icon(painter = painterResource(it.icon), contentDescription = stringResource(it.contentDescription)) },
+                                        label = { Text(stringResource(it.label)) },
+                                        selected = it == currentDestination,
+                                        onClick = { currentDestination = it }
+                                    )
+                                }
+                            },
+                        ) {
+                            when (currentDestination) {
+                                AppDestinations.PROGRESS -> Progress(outerPadding = innerPadding)
+                                AppDestinations.PRESCRIPTIONS -> Prescriptions(outerPadding = innerPadding, onAddPrescription = { backStack.add(FullScreenDestination.ADD_PRESCRIPTION) })
+                                AppDestinations.INVENTORY -> Inventory(outerPadding = innerPadding, onAddMedication = { backStack.add(FullScreenDestination.ADD_INVENTORY_MEDICATION) })
                             }
-                        },
-                    ) {
-                        when (currentDestination) {
-                            AppDestinations.PROGRESS -> Progress(outerPadding = innerPadding)
-                            AppDestinations.PRESCRIPTIONS -> Medications()
-                            AppDestinations.INVENTORY -> Inventory()
                         }
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Medications(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-    ) {
-        Text("whoops")
-    }
-}
-
-@Composable
-fun Inventory(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-    ) {
-        Text("inventory")
     }
 }
 
