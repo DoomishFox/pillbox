@@ -15,8 +15,8 @@ data class PrescriptionSchedule(
 
 @Serializable
 enum class PrescriptionScheduleKind {
-    EVERY_N_HOURS,
-    EVERY_N_DAYS,
+    HOURLY,
+    DAILY,
     WEEKLY,
     MONTHLY,
     ON_OFF_CYCLE,

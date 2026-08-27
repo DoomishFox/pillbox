@@ -18,8 +18,9 @@ data class InventoryMedicationCard(
     val id: Int,
     val name: String,
     val type: String,
-    val quantity: String,
-    val defaultDose: String,
+    val quantity: Int,
+    val dose: Int,
+    val doseUnit: String,
 )
 
 data class NewMedicationFormState(
@@ -51,8 +52,9 @@ class InventoryViewModel(private val chart: ChartDb) : ViewModel() {
                     id = it.id,
                     name = it.name,
                     type = it.type.displayName(),
-                    quantity = "${it.inventoryQuantity} ${it.defaultDoseUnit}",
-                    defaultDose = "Usual dose: ${it.defaultDose} ${it.defaultDoseUnit}",
+                    quantity = it.inventoryQuantity,
+                    dose = it.defaultDose,
+                    doseUnit = it.defaultDoseUnit
                 )
             },
             form = form,

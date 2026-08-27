@@ -154,7 +154,7 @@ data class PrescriptionSummary(
         PrescriptionAdministration::class,
         AdministrationRecord::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @ColumnTypeConverters(DatabaseConverters::class)

@@ -16,10 +16,12 @@ import com.foxnet.medications.ui.theme.spacing
 @Composable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 fun HorizontalTextDivider(
+    modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.outlineVariant,
     content: @Composable () -> Unit,
 ) {
     Row(
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val dividerThickness = 2.dp

@@ -36,7 +36,8 @@ fun TaskItem(
     Row(
         modifier = Modifier.fillMaxWidth()
             .background(
-                color = MaterialTheme.colorScheme.surfaceContainer
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                shape = MaterialTheme.shapes.extraSmall,
             )
             .padding(MaterialTheme.spacing.small)
     ) {

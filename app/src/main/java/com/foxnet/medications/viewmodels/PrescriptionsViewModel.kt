@@ -26,7 +26,15 @@ import java.time.temporal.ChronoUnit
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-data class PrescriptionCard(val id: Int, val medicationName: String, val medicationType: String, val doseSchedule: String, val nextDose: String, val active: Boolean)
+data class PrescriptionCard(
+    val id: Int,
+    val medicationName: String,
+    val medicationType: String,
+    val dose: String,
+    val doseSchedule: String,
+    val nextDose: String,
+    val active: Boolean
+)
 
 enum class PrescriptionEndCondition { ONGOING, DURATION, END_DATE }
 
@@ -47,25 +55,37 @@ data class PrescriptionFormState(
     val newMedicationInventoryQuantity: String = "0",
     val newMedicationDefaultDose: String = "1",
     val newMedicationDefaultDoseUnit: String = "mg",
-    val scheduleKind: PrescriptionScheduleKind = PrescriptionScheduleKind.EVERY_N_HOURS,
+    val scheduleKind: PrescriptionScheduleKind = PrescriptionScheduleKind.HOURLY,
     val interval: String = "24",
     val daysOfWeek: Set<Int> = emptySet(),
     val daysOfMonth: String = "",
     val daysOn: String = "",
     val daysOff: String = "",
-    val administrations: List<AdministrationDraft> = listOf(AdministrationDraft(id = 0, time = "09:00")),
+    val administrations: List<AdministrationDraft> = listOf(
+        AdministrationDraft(
+            id = 0,
+            time = "09:00"
+        )
+    ),
     val endCondition: PrescriptionEndCondition = PrescriptionEndCondition.ONGOING,
     val durationDays: String = "",
     val endDate: String = "",
 )
 
 data class PrescriptionsUiState(
-    val prescriptions: List<PrescriptionCard> = emptyList(), val medications: List<Medication> = emptyList(),
-    val form: PrescriptionFormState = PrescriptionFormState(), val isSaving: Boolean = false,
-    val formError: String? = null, val formSubmissionSucceeded: Boolean = false,
+    val prescriptions: List<PrescriptionCard> = emptyList(),
+    val medications: List<Medication> = emptyList(),
+    val form: PrescriptionFormState = PrescriptionFormState(),
+    val isSaving: Boolean = false,
+    val formError: String? = null,
+    val formSubmissionSucceeded: Boolean = false,
 )
 
-private data class Inputs(val prescriptions: List<PrescriptionSummary>, val medications: List<Medication>, val form: PrescriptionFormState)
+private data class Inputs(
+    val prescriptions: List<PrescriptionSummary>,
+    val medications: List<Medication>,
+    val form: PrescriptionFormState
+)
 
 class PrescriptionsViewModel(private val chart: ChartDb) : ViewModel() {
     private val form = MutableStateFlow(PrescriptionFormState())
@@ -74,13 +94,33 @@ class PrescriptionsViewModel(private val chart: ChartDb) : ViewModel() {
     private val formSubmissionSucceeded = MutableStateFlow(false)
     private val json = Json { ignoreUnknownKeys = true }
 
-    private val inputs = combine(chart.observePrescriptions(), chart.observeMedications(), form) { prescriptions, medications, form -> Inputs(prescriptions, medications, form) }
-    val uiState: StateFlow<PrescriptionsUiState> = combine(inputs, isSaving, formError, formSubmissionSucceeded) { input, saving, error, succeeded ->
-        PrescriptionsUiState(input.prescriptions.map(::toCard), input.medications, input.form, saving, error, succeeded)
+    private val inputs = combine(
+        chart.observePrescriptions(),
+        chart.observeMedications(),
+        form
+    ) { prescriptions, medications, form -> Inputs(prescriptions, medications, form) }
+    val uiState: StateFlow<PrescriptionsUiState> = combine(
+        inputs,
+        isSaving,
+        formError,
+        formSubmissionSucceeded
+    ) { input, saving, error, succeeded ->
+        PrescriptionsUiState(
+            input.prescriptions.map(::toCard),
+            input.medications,
+            input.form,
+            saving,
+            error,
+            succeeded
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PrescriptionsUiState())
 
-    fun selectMedication(id: Int) = updateForm { it.copy(selectedMedicationId = id, addingMedication = false) }
-    fun addMedication() = updateForm { it.copy(selectedMedicationId = null, addingMedication = true) }
+    fun selectMedication(id: Int) =
+        updateForm { it.copy(selectedMedicationId = id, addingMedication = false) }
+
+    fun addMedication() =
+        updateForm { it.copy(selectedMedicationId = null, addingMedication = true) }
+
     fun chooseFromInventory() = updateForm { it.copy(addingMedication = false) }
     fun updateForm(transform: (PrescriptionFormState) -> PrescriptionFormState) {
         form.update(transform); formError.value = null; formSubmissionSucceeded.value = false
@@ -88,12 +128,22 @@ class PrescriptionsViewModel(private val chart: ChartDb) : ViewModel() {
 
     fun addAdministration() = updateForm { current ->
         val nextId = (current.administrations.maxOfOrNull(AdministrationDraft::id) ?: -1) + 1
-        current.copy(administrations = current.administrations + AdministrationDraft(nextId, "12:00"))
+        current.copy(
+            administrations = current.administrations + AdministrationDraft(
+                nextId,
+                "12:00"
+            )
+        )
     }
 
-    fun updateAdministration(id: Int, transform: (AdministrationDraft) -> AdministrationDraft) = updateForm { current ->
-        current.copy(administrations = current.administrations.map { if (it.id == id) transform(it) else it })
-    }
+    fun updateAdministration(id: Int, transform: (AdministrationDraft) -> AdministrationDraft) =
+        updateForm { current ->
+            current.copy(administrations = current.administrations.map {
+                if (it.id == id) transform(
+                    it
+                ) else it
+            })
+        }
 
     fun removeAdministration(id: Int) = updateForm { current ->
         current.copy(administrations = current.administrations.filterNot { it.id == id })
@@ -101,7 +151,8 @@ class PrescriptionsViewModel(private val chart: ChartDb) : ViewModel() {
 
     fun savePrescription() {
         val input = form.value
-        val medication = uiState.value.medications.firstOrNull { it.id == input.selectedMedicationId }
+        val medication =
+            uiState.value.medications.firstOrNull { it.id == input.selectedMedicationId }
         val defaultDose = input.newMedicationDefaultDose.toIntOrNull()
         val inventoryQuantity = input.newMedicationInventoryQuantity.toIntOrNull()
         val interval = input.interval.toIntOrNull()
@@ -111,8 +162,12 @@ class PrescriptionsViewModel(private val chart: ChartDb) : ViewModel() {
             Triple(draft, overrideDose, time)
         }
         val schedule = input.toSchedule(interval)
-        val endDate = if (input.endCondition == PrescriptionEndCondition.END_DATE) runCatching { LocalDate.parse(input.endDate) }.getOrNull() else null
-        val duration = if (input.endCondition == PrescriptionEndCondition.DURATION) input.durationDays.toIntOrNull()?.takeIf { it > 0 }?.let(Period::ofDays) else null
+        val endDate = if (input.endCondition == PrescriptionEndCondition.END_DATE) runCatching {
+            LocalDate.parse(input.endDate)
+        }.getOrNull() else null
+        val duration =
+            if (input.endCondition == PrescriptionEndCondition.DURATION) input.durationDays.toIntOrNull()
+                ?.takeIf { it > 0 }?.let(Period::ofDays) else null
         val error = when {
             medication == null && !input.addingMedication -> "Choose an inventoried medication or add one."
             medication == null && input.newMedicationName.isBlank() -> "Enter a medication name."
@@ -128,11 +183,19 @@ class PrescriptionsViewModel(private val chart: ChartDb) : ViewModel() {
             endDate != null && endDate < LocalDate.now() -> "The end date must be today or later."
             else -> null
         }
-        if (error != null) { formError.value = error; return }
+        if (error != null) {
+            formError.value = error; return
+        }
         val prescription = Prescription(
-            active = true, medicationId = medication?.id ?: 0, type = 0,
+            active = true,
+            medicationId = medication?.id ?: 0,
+            type = 0,
             friendlyName = medication?.name ?: input.newMedicationName.trim(),
-            withFood = false, startDate = LocalDate.now(), endDate = endDate, duration = duration, schedule = json.encodeToString(PrescriptionSchedule.serializer(), schedule!!),
+            withFood = false,
+            startDate = LocalDate.now(),
+            endDate = endDate,
+            duration = duration,
+            schedule = json.encodeToString(PrescriptionSchedule.serializer(), schedule!!),
         )
         val administrationEntities = administrations.map { (draft, overrideDose, time) ->
             PrescriptionAdministration(
@@ -162,39 +225,91 @@ class PrescriptionsViewModel(private val chart: ChartDb) : ViewModel() {
                 )
                 else chart.createPrescription(medication.id, prescription, administrationEntities)
                 form.value = PrescriptionFormState(); formSubmissionSucceeded.value = true
-            } finally { isSaving.value = false }
+            } finally {
+                isSaving.value = false
+            }
         }
     }
 
-    private fun PrescriptionFormState.toSchedule(interval: Int?): PrescriptionSchedule? = when (scheduleKind) {
-        PrescriptionScheduleKind.EVERY_N_HOURS -> interval?.takeIf { it > 0 }?.let { PrescriptionSchedule(scheduleKind, interval = it) }
-        PrescriptionScheduleKind.EVERY_N_DAYS -> interval?.takeIf { it > 0 }?.let { PrescriptionSchedule(scheduleKind, interval = it) }
-        PrescriptionScheduleKind.WEEKLY -> interval?.takeIf { it > 0 }?.takeIf { daysOfWeek.isNotEmpty() }?.let { PrescriptionSchedule(scheduleKind, it, daysOfWeek = daysOfWeek) }
-        PrescriptionScheduleKind.MONTHLY -> interval?.takeIf { it > 0 }?.takeIf { daysOfMonth.split(',').mapNotNull(String::trim).mapNotNull(String::toIntOrNull).all { day -> day in 1..31 } }?.let {
-            PrescriptionSchedule(scheduleKind, it, daysOfMonth = daysOfMonth.split(',').mapNotNull(String::trim).mapNotNull(String::toIntOrNull).toSet())
+    private fun PrescriptionFormState.toSchedule(interval: Int?): PrescriptionSchedule? =
+        when (scheduleKind) {
+            PrescriptionScheduleKind.HOURLY -> interval?.takeIf { it > 0 }
+                ?.let { PrescriptionSchedule(scheduleKind, interval = it) }
+
+            PrescriptionScheduleKind.DAILY -> interval?.takeIf { it > 0 }
+                ?.let { PrescriptionSchedule(scheduleKind, interval = it) }
+
+            PrescriptionScheduleKind.WEEKLY -> interval?.takeIf { it > 0 }
+                ?.takeIf { daysOfWeek.isNotEmpty() }
+                ?.let { PrescriptionSchedule(scheduleKind, it, daysOfWeek = daysOfWeek) }
+
+            PrescriptionScheduleKind.MONTHLY -> interval?.takeIf { it > 0 }?.takeIf {
+                daysOfMonth.split(',').mapNotNull(String::trim).mapNotNull(String::toIntOrNull)
+                    .all { day -> day in 1..31 }
+            }?.let {
+                PrescriptionSchedule(
+                    scheduleKind,
+                    it,
+                    daysOfMonth = daysOfMonth.split(',').map(String::trim)
+                        .mapNotNull(String::toIntOrNull).toSet()
+                )
+            }
+
+            PrescriptionScheduleKind.ON_OFF_CYCLE -> daysOn.toIntOrNull()?.takeIf { it > 0 }
+                ?.let { on ->
+                    daysOff.toIntOrNull()?.takeIf { it >= 0 }?.let { off ->
+                        PrescriptionSchedule(
+                            scheduleKind,
+                            daysOn = on,
+                            daysOff = off
+                        )
+                    }
+                }
         }
-        PrescriptionScheduleKind.ON_OFF_CYCLE -> daysOn.toIntOrNull()?.takeIf { it > 0 }?.let { on -> daysOff.toIntOrNull()?.takeIf { it >= 0 }?.let { off -> PrescriptionSchedule(scheduleKind, daysOn = on, daysOff = off) } }
-    }
 
     private fun toCard(summary: PrescriptionSummary): PrescriptionCard {
-        val schedule = runCatching { json.decodeFromString(PrescriptionSchedule.serializer(), summary.schedule) }.getOrElse { PrescriptionSchedule(PrescriptionScheduleKind.EVERY_N_HOURS, 24) }
-        return PrescriptionCard(summary.prescriptionId, summary.medicationName, summary.medicationType.displayName(), "${summary.dose} ${summary.doseUnit} ${schedule.description()}", summary.nextDose(schedule), summary.active)
+        val schedule = runCatching {
+            json.decodeFromString(
+                PrescriptionSchedule.serializer(),
+                summary.schedule
+            )
+        }.getOrElse { PrescriptionSchedule(PrescriptionScheduleKind.HOURLY, 24) }
+        return PrescriptionCard(
+            summary.prescriptionId,
+            summary.medicationName,
+            medicationType = summary.medicationType.displayName(),
+            dose = "${summary.dose} ${summary.doseUnit}",
+            doseSchedule = schedule.description(),
+            nextDose = summary.nextDose(schedule),
+            summary.active
+        )
     }
 }
 
 private fun PrescriptionSchedule.description(): String = when (kind) {
-    PrescriptionScheduleKind.EVERY_N_HOURS -> "every $interval hour${if (interval == 1) "" else "s"}"
-    PrescriptionScheduleKind.EVERY_N_DAYS -> "every $interval day${if (interval == 1) "" else "s"}"
-    PrescriptionScheduleKind.WEEKLY -> "every $interval week${if (interval == 1) "" else "s"} on ${daysOfWeek.sorted().joinToString { it.dayName() }}"
-    PrescriptionScheduleKind.MONTHLY -> "every $interval month${if (interval == 1) "" else "s"} on day ${daysOfMonth.sorted().joinToString()}"
+    PrescriptionScheduleKind.HOURLY -> "every $interval hour${if (interval == 1) "" else "s"}"
+    PrescriptionScheduleKind.DAILY -> "every $interval day${if (interval == 1) "" else "s"}"
+    PrescriptionScheduleKind.WEEKLY -> "every $interval week${if (interval == 1) "" else "s"} on ${
+        daysOfWeek.sorted().joinToString { it.dayName() }
+    }"
+
+    PrescriptionScheduleKind.MONTHLY -> "every $interval month${if (interval == 1) "" else "s"} on day ${
+        daysOfMonth.sorted().joinToString()
+    }"
+
     PrescriptionScheduleKind.ON_OFF_CYCLE -> "$daysOn days on, $daysOff days off"
 }
-private fun Int.dayName() = java.time.DayOfWeek.of(this).name.lowercase().replaceFirstChar(Char::uppercase)
-private fun MedicationType.displayName() = name.lowercase(Locale.getDefault()).replaceFirstChar { it.titlecase(Locale.getDefault()) }
+
+private fun Int.dayName() =
+    java.time.DayOfWeek.of(this).name.lowercase().replaceFirstChar(Char::uppercase)
+
+private fun MedicationType.displayName() =
+    name.lowercase(Locale.getDefault()).replaceFirstChar { it.titlecase(Locale.getDefault()) }
 
 private fun PrescriptionSummary.nextDose(schedule: PrescriptionSchedule): String {
     if (!active) return "Inactive"
-    val now = LocalDateTime.now(); val time = administrationTime ?: LocalTime.MIDNIGHT
+    val now = LocalDateTime.now();
+    val time = administrationTime ?: LocalTime.MIDNIGHT
     val next = nextScheduledDateTime(schedule, now, time) ?: return "No upcoming dose"
     val finalDate = endDate ?: duration?.let(startDate::plus)
     if (finalDate != null && next.toLocalDate().isAfter(finalDate)) return "Course complete"
@@ -202,12 +317,23 @@ private fun PrescriptionSummary.nextDose(schedule: PrescriptionSchedule): String
     return when (ChronoUnit.DAYS.between(now.toLocalDate(), next.toLocalDate())) {
         0L -> "Next dose today at $formattedTime"
         1L -> "Next dose tomorrow at $formattedTime"
-        else -> "Next dose ${next.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault()))} at $formattedTime"
+        else -> "Next dose ${
+            next.format(
+                DateTimeFormatter.ofPattern(
+                    "EEEE, MMMM d",
+                    Locale.getDefault()
+                )
+            )
+        } at $formattedTime"
     }
 }
 
-private fun PrescriptionSummary.nextScheduledDateTime(schedule: PrescriptionSchedule, now: LocalDateTime, time: LocalTime): LocalDateTime? {
-    if (schedule.kind == PrescriptionScheduleKind.EVERY_N_HOURS) {
+private fun PrescriptionSummary.nextScheduledDateTime(
+    schedule: PrescriptionSchedule,
+    now: LocalDateTime,
+    time: LocalTime
+): LocalDateTime? {
+    if (schedule.kind == PrescriptionScheduleKind.HOURLY) {
         var dose = LocalDateTime.of(startDate, time)
         while (!dose.isAfter(now)) dose = dose.plusHours(schedule.interval.toLong())
         return dose
@@ -221,10 +347,23 @@ private fun PrescriptionSummary.nextScheduledDateTime(schedule: PrescriptionSche
     return null
 }
 
-private fun PrescriptionSchedule.appliesOn(date: LocalDate, start: LocalDate): Boolean = when (kind) {
-    PrescriptionScheduleKind.WEEKLY -> ChronoUnit.WEEKS.between(start, date) % interval == 0L && date.dayOfWeek.value in daysOfWeek
-    PrescriptionScheduleKind.MONTHLY -> ChronoUnit.MONTHS.between(start.withDayOfMonth(1), date.withDayOfMonth(1)) % interval == 0L && date.dayOfMonth in daysOfMonth
-    PrescriptionScheduleKind.ON_OFF_CYCLE -> ChronoUnit.DAYS.between(start, date).let { it >= 0 && it % (daysOn + daysOff) < daysOn }
-    PrescriptionScheduleKind.EVERY_N_DAYS -> ChronoUnit.DAYS.between(start, date).let { it >= 0 && it % interval == 0L }
-    PrescriptionScheduleKind.EVERY_N_HOURS -> false
-}
+private fun PrescriptionSchedule.appliesOn(date: LocalDate, start: LocalDate): Boolean =
+    when (kind) {
+        PrescriptionScheduleKind.WEEKLY -> ChronoUnit.WEEKS.between(
+            start,
+            date
+        ) % interval == 0L && date.dayOfWeek.value in daysOfWeek
+
+        PrescriptionScheduleKind.MONTHLY -> ChronoUnit.MONTHS.between(
+            start.withDayOfMonth(1),
+            date.withDayOfMonth(1)
+        ) % interval == 0L && date.dayOfMonth in daysOfMonth
+
+        PrescriptionScheduleKind.ON_OFF_CYCLE -> ChronoUnit.DAYS.between(start, date)
+            .let { it >= 0 && it % (daysOn + daysOff) < daysOn }
+
+        PrescriptionScheduleKind.DAILY -> ChronoUnit.DAYS.between(start, date)
+            .let { it >= 0 && it % interval == 0L }
+
+        PrescriptionScheduleKind.HOURLY -> false
+    }
